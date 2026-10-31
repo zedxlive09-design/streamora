@@ -50,5 +50,31 @@ test
 prompt
 
 server.log
-# Skills directory
+
+# Sandbox-only / non-project folders (Streamora repo does not include these)
 /skills/
+/workspace/
+/upload/
+/download/
+/db/
+/.zscripts/
+/examples/
+/mini-services/
+/Caddyfile
+
+# E2E workflow templates (kept in docs/ instead)
+/AGENTS.md
+
+# Playwright
+/playwright/.cache/
+/test-results/
+/playwright-report/
+
+# Misc
+.claude
+.z-ai-config
+*.log
+dev.log
+dev.out.log
+test
+prompt
