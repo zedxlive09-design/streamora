@@ -113,8 +113,15 @@ async function fetchJson<T>(url: string): Promise<T> {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Public read API (used by route handlers + server components).
+// Test-only injection: replace the in-memory catalog cache.
+// Production code should never call this.
 // ─────────────────────────────────────────────────────────────
+
+/** @internal */
+export function __setCatalogForTesting(index: CatalogIndex | null): void {
+  cached = index
+  fetching = null
+}
 
 export interface ChannelQuery {
   page?: number
