@@ -1,0 +1,141 @@
+// Streamora Prisma schema
+// Database: Turso (libSQL/SQLite) in production, local SQLite file in dev.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Auth & users
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         String   @default("USER") // USER | ADMIN | SUPERADMIN
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile      UserProfile?
+  favorites    UserFavorite[]
+  history      UserWatchHistory[]
+  channelMeta  UserChannelMetadata[]
+  auditLogs    AuditLog[]
+}
+
+model UserProfile {
+  userId         String  @id
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName    String?
+  defaultCountry String? // ISO 3166-1 alpha-2
+  theme          String  @default("system") // light | dark | system
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model UserFavorite {
+  id        String   @id @default(cuid())
+  userId    String
+  channelId String   // iptv-org channel id (not FK; external data)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, channelId])
+  @@index([userId])
+}
+
+model UserWatchHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  channelId String
+  channelName String // snapshot for display even if channel removed from iptv-org
+  streamUrl String
+  watchedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, watchedAt])
+}
+
+// Per-user, per-channel free-form metadata (key/value list, JSON-stored).
+model UserChannelMetadata {
+  id        String   @id @default(cuid())
+  userId    String
+  channelId String
+  fields    String   // JSON-encoded array of {key, value} objects (max 20 entries)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, channelId])
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Ads (admin-managed)
+// ─────────────────────────────────────────────────────────────
+
+model AdSlot {
+  id        String   @id @default(cuid())
+  name      String
+  position  String   // home-top | home-sidebar | browse-top | watch-pre | watch-mid | footer
+  type      String   // text | image | html
+  content   String   // text body, image URL, or sanitized HTML
+  frequency String   @default("every-load") // every-load | once-per-session | every-n-minutes
+  intervalMinutes Int? // when frequency = every-n-minutes
+  isActive  Boolean  @default(true)
+  metadata  String   @default("{}") // JSON: alt text, link URL, dismissible, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  placements AdPlacement[]
+}
+
+// Optional: pin an AdSlot to a specific page (default = all pages with matching position).
+model AdPlacement {
+  id        String   @id @default(cuid())
+  adSlotId  String
+  page      String   // home | browse | watch | dashboard | all
+  createdAt DateTime @default(now())
+
+  adSlot    AdSlot   @relation(fields: [adSlotId], references: [id], onDelete: Cascade)
+
+  @@index([adSlotId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Site settings (admin-managed key/value store)
+// ─────────────────────────────────────────────────────────────
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────
+// Audit log (every admin mutation)
+// ─────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String   // ad.create | ad.update | ad.delete | user.role.update | setting.update | ...
+  target    String   // resource id or key
+  metadata  String   @default("{}") // JSON snapshot of change
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
