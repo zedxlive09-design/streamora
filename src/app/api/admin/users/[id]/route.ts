@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { getServerSession } from 'next-auth/next'
 import { z } from 'zod'
 import { authOptions, isAdmin, isSuperadmin } from '@/lib/auth'
 import { db } from '@/lib/db'

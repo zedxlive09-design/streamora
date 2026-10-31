@@ -120,3 +120,33 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Subtle dotted grid backdrop used on hero sections. */
+.streamora-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    oklch(0.5 0 0 / 0.12) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+}
+
+/* Thin custom scrollbar for long channel lists. */
+.streamora-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted-foreground) transparent;
+}
+.streamora-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.streamora-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.streamora-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 8px;
+}
+.streamora-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted-foreground);
+}

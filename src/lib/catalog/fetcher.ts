@@ -98,8 +98,9 @@ async function refreshCatalog(): Promise<CatalogIndex> {
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url, {
     headers: { 'User-Agent': 'Streamora/0.1 (+https://github.com/iptv-org/api)' },
-    // Vercel edge cache; falls back to our in-memory cache on failure.
-    next: { revalidate: 86400 },
+    // Do not use Next.js fetch cache — iptv-org files exceed the 2MB data cache
+    // limit, and we already cache in-memory for 24h via getCatalog().
+    cache: 'no-store',
   })
   if (!res.ok) {
     if (cached) {
