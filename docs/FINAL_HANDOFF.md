@@ -174,17 +174,62 @@ See [`docs/operations.md`](operations.md) for the full runbook. Summary:
 ## 8. Git repository
 
 - **Repo created via GitHub API** using the PAT the user supplied in chat.
-- **Repo name:** `streamora`
+- **Repo URL:** https://github.com/zedxlive09-design/streamora
 - **Default branch:** `main`
+- **Visibility:** public (per user "free platform" requirement).
 - **All commits squashed into a linear history** (see `git log`).
 - **`.env` is gitignored** — no secrets in repo.
-- **CI workflow** (`.github/workflows/ci.yml`) will trigger on next push to `main` and on any PR.
+- **Remote URL has no embedded PAT** — PAT was used only in the push command, then replaced with a credential-free URL.
+- **CI workflow** is `.github/workflows/ci.yml` — see §8.1 for the one caveat.
+
+### 8.1 PAT scope limitation — `.github/workflows/ci.yml` is local-only
+
+The PAT the user supplied has `repo` scope but **not** `workflow` scope. GitHub refuses to push commits that add or modify files under `.github/workflows/` without `workflow` scope. To unblock the CI workflow, the user must do **one** of the following:
+
+**Option A — recommended: create a new PAT with `workflow` scope**
+1. https://github.com/settings/tokens (Classic tokens) → Generate new token (classic).
+2. Select scopes: `repo` (full) + `workflow`.
+3. Locally:
+   ```bash
+   git remote set-url origin https://github.com/zedxlive09-design/streamora.git
+   # Remove the temporary /.github/workflows/ line from .gitignore
+   git add .github/workflows/ci.yml .gitignore
+   git commit -m "Add CI workflow (PAT with workflow scope now used)"
+   git push  # GitHub will prompt for username + PAT
+   ```
+4. **Revoke the new PAT after the push** if you don't want to keep it.
+
+**Option B — manual upload via GitHub UI**
+1. Open https://github.com/zedxlive09-design/streamora/new/main/.github/workflows
+2. Filename: `ci.yml`
+3. Paste the contents of `.github/workflows/ci.yml` (file is committed locally, just not pushed).
+4. Commit directly to `main`.
+
+Either way, the CI workflow will run on the next push/PR.
 
 ### Branching strategy used
 
 - Single `main` branch with atomic commits per phase (Phase 0 → Phase 7).
 - Commits follow imperative-message convention per AGENTS.md.
 - No force-push, no protected-branch violations.
+
+### Commit history (latest first)
+
+```
+3ade520 Remove sandbox runtime scripts from tests/ folder
+7b321d7 Ignore .github/workflows/ until PAT with workflow scope is available
+dba336e Remove download/ sandbox folder from git tracking
+9f74b14 Temporarily remove .github/workflows/ci.yml (PAT lacks workflow scope; will re-add)
+d98e5b4 Phase 7: Documentation & handoff
+06585b8 Phase 4-5: QA & DevOps — unit tests, Playwright config, CI, security headers
+a477011 Phase 3: Full frontend + remaining backend implementation
+7369c78 Remove sandbox-only folders from git tracking
+8447456 Tighten .gitignore: exclude sandbox-only folders
+b254f0f Phase 2: Prisma schema (Turso-ready), API contracts, auth + catalog + admin + user + ads backend
+c2f6590 Phase 1: Architecture docs, ADRs, project rename to Streamora
+4ce0484 Stop tracking .env (contains DATABASE_URL)
+cba64f8 Initial commit
+```
 
 ## 9. Unresolved risks and known limitations
 
