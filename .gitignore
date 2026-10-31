@@ -81,3 +81,6 @@ prompt
 
 # Workflows: temporarily ignored until PAT with 'workflow' scope is provided
 /.github/workflows/
+
+# Sandbox runtime scripts
+/tests/*-runtime-*.sh
