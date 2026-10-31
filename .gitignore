@@ -78,3 +78,6 @@ dev.log
 dev.out.log
 test
 prompt
+
+# Workflows: temporarily ignored until PAT with 'workflow' scope is provided
+/.github/workflows/
